@@ -10,6 +10,10 @@ This project is aimed at making it possible for users to name the discriminator 
 
 Currently, when creating a document in a collection that inherits from another collection, a `_type` field will be created in the document to specify which of the child collections the document belongs to. I want to provide the user with the option to name this field to something other than `_type`, a feature provided in other ODM's like Mongoose and Doctrine.
 
+## Goals 
+- Implement a way to specify the discriminator key
+- Create a user-facing API that allows the user to easily set the discriminator key.
+
 ## Mongoose example 
 
 The following is an example of how the discriminator key is specified in Mongoose:
@@ -46,6 +50,8 @@ new Employee().save()
 }
 ```
 As you can see, the discriminator key is specified in the parent schema. Mongoose also has the option to specify the value of the discriminator for the child schemas. This is why the `emp_type` in the employee document has "staff" as its value, as was set in the third parameter to the `Person.discriminator()` function.
+
+For an example using PHP and Doctrine, go to the end of this document.
 
 ## Proposed Functionality
 
@@ -110,7 +116,7 @@ The following are my plans for the implementation of this feature:
 
 ## Assumptions and Risks
 
-The biggest risk of this project is that there might be a piece of code that relies on the fact that the discriminator key be `_type`, I'll just have to make sure to find all those places and change them.
+The biggest risk of this project is that there might be a piece of code that relies on the discriminator key being `_type`, and the code breaks because of it.
 
 ## Dependencies
 None
@@ -123,3 +129,28 @@ I think this project should take about 1-2 weeks to complete. This project canno
 
 ## Future
 A potential added feature to this project would be allowing the user to specify the value of the discriminator for each child class. Right now, the default value is the class as a string.
+
+## Doctrine Example: 
+```php
+<?php
+namespace MyProject\Model;
+
+/**
+ * @Entity
+ * @InheritanceType("SINGLE_TABLE")
+ * @DiscriminatorColumn(name="discr", type="string")
+ * @DiscriminatorMap({"person" = "Person", "employee" = "Employee"})
+ */
+class Person
+{
+    // ...
+}
+
+/**
+ * @Entity
+ */
+class Employee extends Person
+{
+    // ...
+}
+```
