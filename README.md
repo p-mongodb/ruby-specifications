@@ -11,47 +11,106 @@ This project is aimed at making it possible for users to name the discriminator 
 Currently, when creating a document in a collection that inherits from another collection, a `_type` field will be created in the document to specify which of the child collections the document belongs to. I want to provide the user with the option to name this field to something other than `_type`, a feature provided in other ODM's like Mongoose and Doctrine.
 
 ## Goals 
-- Implement a way to specify the discriminator key
 - Create a user-facing API that allows the user to easily set the discriminator key.
+- Implement a way to specify the discriminator key
 
-## Mongoose example 
+## ActiveRecord Example
+The following is an example of how the discriminator key (called the inheritance_column) is specified in Mongoose:
+```ruby
+# shape.rb
+class Shape < ApplicationRecord
+    self.inheritance_column = "type2"
+end
+
+# circle.rb
+class Circle < Shape
+end
+
+# 20200709125447_create_shapes.rb
+class CreateShapes < ActiveRecord::Migration[6.0]
+  def change
+    create_table :shapes do |t|
+      t.numeric :x
+      t.numeric :y
+      t.string :type2
+
+      t.timestamps
+    end
+  end
+end
+
+
+# seeds.rb
+circle = Circle.create(x: 1, y:2)
+
+# Example Circle row
+id|x|y|type2 |        created_at        |        updated_at       |
+1 |1|2|Circle|2020-07-09 13:03:00.201087|2020-07-09 13:03:00.201087
+```
+
+
+## Mongoose Example 
 
 The following is an example of how the discriminator key is specified in Mongoose:
 ```js
 const { Schema } = mongoose
 
-var Person = mongoose.model('Person', new Schema({
-  name: String,
-  createdAt: Date
+var Shape = mongoose.model('Shape', new Schema({
+  x: Number,
+  y: Number
 }, {
-  discriminatorKey: 'emp_types',
-  collection: 'people'
+  discriminatorKey: 'shape_type',
+  collection: 'shapes'
 }));
 
-var Boss = Person.discriminator('Boss', new Schema({}));
-new Boss().save()
+var Circle = Shape.discriminator('Circle', new Schema({}));
+new Circle().save()
 
-var employeeSchema = new Schema({ boss: String });
-var Employee = Person.discriminator('Employee', employeeSchema, 'staff');
-new Employee().save()
+var rectangleSchema = new Schema({});
+var Rectangle = Shape.discriminator('Rectangle', rectangleSchema, 'rect');
+new Rectangle().save()
 
-// Example Boss document
+// Example Circle document
 {
-    "_id": ObjectId("5f04b51b47fbfa7351a8b040"),
-    "emp_type": "Boss",
+    "_id": ObjectId("5f06232bde3b7d13721e17f3"),
+    "shape_type": "Circle",
     "__v": 0
 }
 
-// Example Employee document
+// Example Rectangle document
 {
-    "_id": ObjectId("5f04b51b47fbfa7351a8b041"),
-    "emp_type": "staff",
+    "_id": ObjectId("5f06232bde3b7d13721e17f4"),
+    "shape_type": "rect",
     "__v": 0
 }
 ```
-As you can see, the discriminator key is specified in the parent schema. Mongoose also has the option to specify the value of the discriminator for the child schemas. This is why the `emp_type` in the employee document has "staff" as its value, as was set in the third parameter to the `Person.discriminator()` function.
+As you can see, the discriminator key is specified in the parent schema. Mongoose also has the option to specify the value of the discriminator for the child schemas. This is why the `shape_type` in the Rectangle document has "rect" as its value, as was set in the third parameter to the `Shape.discriminator()` function.
 
-For an example using PHP and Doctrine, go to the end of this document.
+## Doctrine Example: 
+The following is an example of how the discriminator key (called the DiscriminatorColumn) is specified in Doctrine:
+```php
+<?php
+namespace MyProject\Model;
+
+/**
+ * @Entity
+ * @InheritanceType("SINGLE_TABLE")
+ * @DiscriminatorColumn(name="discr", type="string")
+ * @DiscriminatorMap({"shape" = "Shape", "circle" = "Circle"})
+ */
+class Shape
+{
+    // ...
+}
+
+/**
+ * @Entity
+ */
+class Circle extends Shape
+{
+    // ...
+}
+```
 
 ## Proposed Functionality
 
@@ -108,7 +167,7 @@ There is an added `discriminator_key` function that I will be adding.
 The following are my plans for the implementation of this feature:
 
 - The main code for adding the `_type` field is in `traversable.rb` in a function titled `inherited`. There are also a few other places where `:type` are hard-coded that I have to take care of.
-- Add an `attr_reader` to the `travesable.rb` file that holds the discriminator key. This variable should default to `_:type`.
+- Add an `attr_reader` to the `travesable.rb` file that holds the discriminator key. This variable should default to `:_type`.
 - Change the `inherited` function to use this variable instead of hard-coding `:type`.
 - Create a function in `traversable.rb` that returns the discriminator key.
 - Modify the `criteria.rb` file to change the hard-coded `:type` to use this function to get the discriminator key
@@ -122,7 +181,8 @@ The biggest risk of this project is that there might be a piece of code that rel
 None
 
 ## Open Questions
-None
+- Should the function be called `discriminator_key` or `inheritance_field`?
+- Should we use a function for setting the discriminator or an assignment, like ActiveRecord does?
 
 ## Complexity Estimate
 I think this project should take about 1-2 weeks to complete. This project cannot be parallelized between multiple engineers.
@@ -130,27 +190,11 @@ I think this project should take about 1-2 weeks to complete. This project canno
 ## Future
 A potential added feature to this project would be allowing the user to specify the value of the discriminator for each child class. Right now, the default value is the class as a string.
 
-## Doctrine Example: 
-```php
-<?php
-namespace MyProject\Model;
 
-/**
- * @Entity
- * @InheritanceType("SINGLE_TABLE")
- * @DiscriminatorColumn(name="discr", type="string")
- * @DiscriminatorMap({"person" = "Person", "employee" = "Employee"})
- */
-class Person
-{
-    // ...
-}
+## Testing
 
-/**
- * @Entity
- */
-class Employee extends Person
-{
-    // ...
-}
-```
+None of the current tests should break as a result of this implementation, so it should be helpful to look at the current tests to make sure I haven't broken anything. In terms of testing the new feature, here are some things I would like to test: 
+
+1. One subclass: A case where there is one parent and one child. 
+2. Multiple subclasses: When there is a parent and multiple children.
+3. When changing the discriminator key after documents have been added.
