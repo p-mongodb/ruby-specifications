@@ -119,6 +119,7 @@ The proposed functionality, and the way it works in Mongoose, is as follows:
 - The user will be able to set the discriminator key in the class of the parent collection.
 - On creation of document, a field will be created with the discriminator key that the user specified in the parent class, with the value of the class name as a string.
 - If the discriminator key is changed after documents have been added to the collection, the new key will be used for all future documents while leaving the old ones unmodified.
+- The subclass should not be able to overwrite the dicriminator key of the parent class.
 
 ## User-Facing API
 
