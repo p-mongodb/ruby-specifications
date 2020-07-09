@@ -130,7 +130,7 @@ class Shape
     field :x, type: Integer
     field :y, type: Integer
 
-    discriminator_field_name = :shape_type
+    self.discriminator_field_name = :shape_type
 end
 
 class Circle < Shape
