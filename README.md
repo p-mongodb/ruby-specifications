@@ -131,6 +131,9 @@ class Shape
     field :y, type: Integer
 
     self.discriminator_field_name = :shape_type
+
+    # an alternate syntax idea:
+    self.discriminator_key = :shape_type
 end
 
 class Circle < Shape
