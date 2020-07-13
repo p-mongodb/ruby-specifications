@@ -38,9 +38,11 @@ Much like Mongoid, the Ruby Driver will allow the user to globally enable or dis
 
 ```ruby
 Mongo::QueryCache.enabled = true
+```
 
 It will also provide a block API that enables/disables the Query Cache within the context of the block:
 
+```ruby
 Mongo::QueryCache.cache do
   # all queries within this block are cached
 end
