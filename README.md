@@ -60,7 +60,7 @@ Implement Cached Cursor in Ruby Driver
 * Add logic to clear the query cache (thus invalidating the cache) for each write operation in the Collection and View classes 
 * Add functionality to retrieve cached Cursors from a cache_table with the appropriate query keys
 * Make changes to the each function in the Iterable module to handle if the cursor has be cached or not
-* Modify the way that the cache_key is maintained by adding logic so that queries with different limits can use the same cachedCursor if possible (ex. A query to retrieve the first 100 documents can encompass a query to retrieve the first 10). * In Mongoid, the limit is specified as part of the Query Cache key and does not support similar queries using the same cursor. 
+* In Mongoid, the limit is specified as part of the Query Cache key and does not support similar queries using the same cursor. 
 * Using modern retry read methods currently supported by the Driver so when Mongoid gets updated to reflect the new Query Cache, the legacy read retries can be removed.
 * Add methods to the Cursor class to get and iterate over the cached queries, clear the query cache in the case where write operations are performed, and check whether the Query Cache has been enabled
 * Store the output of the get_more function, which returns the batch of documents from a cursor
