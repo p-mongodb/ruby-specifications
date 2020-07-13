@@ -167,10 +167,15 @@ There is an added `discriminator_key` attribute that I will be adding.
 
 The following are my plans for the implementation of this feature:
 
-- The main code for adding the `_type` field is in `traversable.rb` in a function titled `inherited`. There are also a few other places where `:type` are hard-coded that I have to take care of.
-- Add an `attr_accessor` to the `travesable.rb` file that holds the discriminator key. This variable should default to `:_type`.
-- Change the `inherited` function to use this variable instead of hard-coding `:type`.
-- Modify the `criteria.rb` file to change the hard-coded `:type` to use this attribute to get the discriminator key.
+The main code for adding the `_type` field is in `traversable.rb` in a function titled `inherited`. There are also a few other places where `:type` are hard-coded that I have to take care of.
+
+1. Add a class variable on Mongoid that defaults to `_type`.
+2. Add a class variable to traverable.rb that is an `attr_accessor` and override the getter/setter. 
+    - The getter should get either `@discriminator_key` or `Mongoid.discriminator_key` if that doesn't exist.
+    - The setter should set `@discriminator_key` and then call `.discriminator_key=` on all of its descendants. 
+3. Change the `inherited` function to use this variable instead of hard-coding `:type`.
+4. On setting of the `discriminator_key` class variable, add a field of the new discriminator key using the `field()` function. Leave the other field as is. Also allow the field to be created on the children.
+5. Modify the `criteria.rb` file to change the hard-coded `:type` to use the `discriminator_key` class variable to get the discriminator key.
 
 ## Assumptions and Risks
 
