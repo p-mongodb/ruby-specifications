@@ -4,7 +4,7 @@ Author: Grace Chong
 Reviewer: Emily Giurleo
 
 ## Summary 
-The main goal of this project is to reimplement Mongoid Query Cache as part of the Ruby Driver, so that eventually Mongoid can adapt the new Query Cache implementation without having dependencies on the Driver code. 
+The Mongoid Query Cache will be reimplemented as part of the Ruby Driver, so that Mongoid can adopt the new Query Cache implementation without relying on dependencies on the Driver code internals. 
 
 ## Motivation
 The Mongoid Query Cache allows users to cache the results of find queries, preventing the ODM from making multiple network round-trips to the database when a user executes the same query multiple times. However, the current implementation of the query cache is flawed:
@@ -17,18 +17,19 @@ This project would make both Mongoid and the Ruby Driver easier to maintain and 
 ## Current Behavior 
 Currently, the Cursor implemented by the driver does not support caching.
 
-QueryCache as implemented in Mongoid is a cache of database queries that operate on a per-request basis. It caches queries as hashes on the current thread that is being executed. QueryCache invalidates or clears out the query cache on certain operations, such as all write operations, that can modify the query results and thus invalidate the stored cache. 
+The QueryCache as implemented in Mongoid is a cache of database queries that operate on a per-request basis. It caches queries as hashes on the current thread that is being executed. QueryCache invalidates or clears out the query cache on certain operations, such as all write operations, which can modify the query results and invalidate the stored cache. 
 
-More specifically, Mongoid’s QueryCache caches a Cursor known as CachedCursor, which attempts to load documents from memory first before going back to the database if the same query has already been executed. It inherits from the Driver's version of the Cursor, which stores information such the CollectionView defining the query, the result of the first execution of the query, the server the cursor is locked to, and other options.  
+More specifically, Mongoid’s QueryCache caches a Cursor known as CachedCursor, which attempts to load documents from memory first before going back to the database if the same query has already been executed. It inherits from the Driver's version of the Cursor, which stores information such as the Collection::View defining the query, the result of the first execution of the query, the server the cursor is locked to, and other options.    
 
 ## New Behavior
 
-There shouldn’t be any functional differences between the implementation of caching in the driver compared to caching in Mongoid, so behaviorally they should act the same way. The way a user would interface with the new caching feature in the Driver cursor should be the same as in Mongoid. 
+There should not be any functional differences between the caching implementation in the driver vs. in Mongoid, so behaviorally they should act the same way. A user would interface with the new caching feature in the Driver cursor in the same way as in Mongoid. 
 
 Here are the following proposed features: 
 * Implement a caching cursor in the Ruby Driver.
 * Implement an API in the Ruby Driver that allows the user to enable and disable the query cache on a global level and within the scope of a block.
 * Update Mongoid to use the new Ruby Query Cache implementation.
+to use the new Ruby Query Cache implementation.
 
 ## API Examples
 
@@ -49,25 +50,30 @@ end
 
 Here are some of the changes I plan on implementing to the driver in order to support a query caching feature:
 
-* Add a QueryCache module to the driver which supports Cursor objects that have caching capabilities
-* Enable toggling for QueryCache so that caching is only done if the ruby query cache is turned on. If the option is not enabled, the Cursor should work normally in the same way it did before.  
-* Support storing query caches on locally executed threads as done in Mongoid
-* Include query cache behavior for Collection class by making any write operations aliases to the query cache clear method
-* Include query cache behavior for View classes by making any write operations aliases to the query cache clear method and adding functionality to retrieve cached Cursors from a cache_table with the appropriate keys
+Implement Cached Cursor in Ruby Driver
+
+* Add a QueryCache module to the driver which caches Cursor objects
+* Enable toggling for QueryCache so that caching is only done if the driver query cache is turned on. If the option is not enabled, the Cursor should work in the same way it did before.  
+* Support storing query caches on locally executed threads in the driver as done in Mongoid
+* Add logic to clear the query cache (thus invalidating the cache) for each write operation in the Collection and View classes 
+* Add functionality to retrieve cached Cursors from a cache_table with the appropriate query keys
 * Make changes to the each function in the Iterable module to handle if the cursor has be cached or not
-* Modifying the way that the cache_key is maintained by adding logic so that queries with different limits can use the same cachedCursor if possible (ex. A query to retrieve the first 100 documents can encompass a query to retrieve the first 10)
+* Modify the way that the cache_key is maintained by adding logic so that queries with different limits can use the same cachedCursor if possible (ex. A query to retrieve the first 100 documents can encompass a query to retrieve the first 10). * In Mongoid, the limit is specified as part of the Query Cache key and does not support similar queries using the same cursor. 
 * Using modern retry read methods currently supported by the Driver so when Mongoid gets updated to reflect the new Query Cache, the legacy read retries can be removed.
 * Add methods to the Cursor class to get and iterate over the cached queries, clear the query cache in the case where write operations are performed, and check whether the Query Cache has been enabled
 * Store the output of the get_more function, which returns the batch of documents from a cursor
+
+Implement user-facing caching API in Ruby Driver
+
 * Implement the user-facing caching API in driver for enabling, clearing and retrieving QueryCaches for methods found in Mongoid 
 
-## Assumptions and risks
+Replace Mongoid Query Cache with Driver Query Cache
 
-The biggest risk of this project is that any work done to the Ruby Driver will break the existing Query Cache implementation in Mongoid. 
+* Update Mongoid to use the new Ruby Query Cache implementation.
 
 ## Testing Plan
 
-Here are several areas that would require testing in order to ensure that no Mongoid Query Cache features are affected by the modifications to the Driver.
+The biggest risk of this project is that any work done to the Ruby Driver will break the existing Query Cache implementation in Mongoid. In order to ensure that no Mongoid Query Cache features are affected by the modifications to the Driver, here are several areas that would require testing:
 
 * The ruby driver cursor only does caching if the ruby query cache is turned on. If not, the cursor behaves the same as it’s always behaved. 
 * A Cursor loads documents from memory if the same or similar query has been executed before
@@ -79,7 +85,7 @@ Here are several areas that would require testing in order to ensure that no Mon
 
 ## Documentation Plan
 
-Documentation should be added for the following modifications:
+Documentation (both API and tutorial documentation) should be added for the following modifications:
 * New QueryCache module and methods for getting the cached queries, clearing the query cache, and toggling the enabled query cache option
 * View and Collection classes
 * Iterable class
