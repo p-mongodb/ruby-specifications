@@ -187,6 +187,8 @@ None
 ## Open Questions
 - Should the function be called `discriminator_key` or `inheritance_field`? **discriminator_key**
 - Should we use a function for setting the discriminator or an assignment, like ActiveRecord does? **assignment, attr_accessor**
+- If someone sets the discriminator_key inside the class, should the `_type` field be deleted?
+- If the discriminator key is changed, and since we don't want to delete the previous field, should we delete the default so that we don't have multiple discriminator keys?
 
 ## Complexity Estimate
 I think this project should take about 1-2 weeks to complete. This project cannot be parallelized between multiple engineers.
