@@ -169,10 +169,9 @@ The following are my plans for the implementation of this feature:
 
 The main code for adding the `_type` field is in `traversable.rb` in a function titled `inherited`. There are also a few other places where `:type` are hard-coded that I have to take care of.
 
-1. Add a class variable on Mongoid that defaults to `_type`.
-2. Add a class variable to traverable.rb that is an `attr_accessor` and override the getter/setter. 
-    - The getter should get either `@discriminator_key` or `Mongoid.discriminator_key` if that doesn't exist.
-    - The setter should set `@discriminator_key` and then call `.discriminator_key=` on all of its descendants. 
+1. Add a class variable on Mongoid that defaults to `_type`. This will also be a config option.
+2. Add a class variable to traverable.rb that is an `class_attribute` and delegate the `:discriminator_key` method to `::Mongoid`.
+2. Prepend the `discriminator_key` function with the hereditary check, to make it unable to set the `discriminator_key` from the child.
 3. Change the `inherited` function to use this variable instead of hard-coding `:type`.
 4. On setting of the `discriminator_key` class variable, add a field of the new discriminator key using the `field()` function. Leave the other field as is. Also allow the field to be created on the children.
 5. Modify the `criteria.rb` file to change the hard-coded `:type` to use the `discriminator_key` class variable to get the discriminator key.
@@ -204,3 +203,6 @@ None of the current tests should break as a result of this implementation, so it
 1. One subclass: A case where there is one parent and one child. 
 2. Multiple subclasses: When there is a parent and multiple children.
 3. When changing the discriminator key after documents have been added.
+4. Setting the base document and how that affects all classes.
+5. Setting from the parent and how that affects the children.
+6. Attempting to set from the children and expecting it to fail.
