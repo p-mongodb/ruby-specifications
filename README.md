@@ -1,21 +1,21 @@
-# Discriminator Map Specs
+# Discriminator Value Specs
 Author: Neil Shweky  
 Reviewer: Oleg Pudeyev
 
 ## Summary
 
-This project is aimed at making it possible for users to override the mapping for the discriminator key for a child class.
+This project is aimed at making it possible for users to override the value for the discriminator key for a child class.
 
 ## Motivation
 
 Currently, when creating a document in a collection that inherits from another collection, a discriminator field is created, with the key defaulting to `_type` (which we can now successfully override with MONGOID-4817), and the value as the class as a string. The goal of this project is to give the user the ability to override the default value of this field.
 
 ## Goals 
-- Create a user-facing API that allows the user to easily set the discriminator mapping.
-- Implement a way to specify the discriminator mapping.
+- Create a user-facing API that allows the user to easily set the discriminator value.
+- Implement a way to specify the discriminator value.
 
 ## ActiveRecord Example
-The following is an example of how the discriminator mapping is specified in ActiveRecord:
+The following is an example of how the discriminator value is specified in ActiveRecord:
 ```ruby
 # shape.rb
 class Shape < ApplicationRecord
@@ -54,7 +54,7 @@ id|x|y|   type2   |        created_at        |        updated_at       |
 
 ## Mongoose Example 
 
-The following is an example of how the discriminator mapping is specified in Mongoose:
+The following is an example of how the discriminator value is specified in Mongoose:
 ```js
 const { Schema } = mongoose
 
@@ -90,7 +90,7 @@ new Rectangle().save()
 As you can see, the discriminator key is specified in the parent schema. Mongoose also has the option to specify the value of the discriminator for the child schemas. This is why the `shape_type` in the Rectangle document has `rect` as its value, as was set in the third parameter to the `Shape.discriminator()` function.
 
 ## Doctrine Example: 
-The following is an example of how the discriminator mapping is specified in Doctrine:
+The following is an example of how the discriminator value is specified in Doctrine:
 ```php
 <?php
 namespace MyProject\Model;
@@ -119,9 +119,9 @@ class Circle extends Shape
 
 The proposed functionality, and the way it works in Mongoose, is as follows:
 
-- The user will be able to set the discriminator mapping in each child class.
-- On creation of document, a field will be created with the discriminator key and the specified discriminator mapping as it's value
-- The parent class should not be able to set the discriminator mapping.
+- The user will be able to set the discriminator value in each child class.
+- On creation of document, a field will be created with the discriminator key and the specified discriminator value as it's value
+- The parent class should not be able to set the discriminator value.
 
 ## User-Facing API
 
@@ -137,7 +137,7 @@ end
 class Circle < Shape
     field :radius, type: Float
 
-    self.discriminator_mapping = "Round Thing"
+    self.discriminator_value = "Round Thing"
 end
 
 class Rectangle < Shape
@@ -163,7 +163,7 @@ Rectangle.create!(width: 2, height: 1)
     "height": 1
 }
 ```
-There is an added `discriminator_mapping` attribute that I will be adding.
+There is an added `discriminator_value` attribute that I will be adding.
 
 ## Implementation Plan
 
@@ -172,11 +172,11 @@ The following are my plans for the implementation of this feature:
 The main code for adding the discriminator value is in `traversable.rb` in a function titled `inherited`. There are also a few other places where `class.to_s` is hard-coded that have to be changed.
 
 1. Add a class variable to `traversable.rb` that is an `attr_accessor` and defaults to `class.to_s`.
-2. I want to use an `attr_accessor` here because I don't want inheritance to affect the value of the discriminator mapping.
-3. Have the discriminator mappings set in the default to the discriminator key field in each subclass.
-2. Prepend the `discriminator_mapping` function with the hereditary check, to make it unable to set the `discriminator_mapping` from the parent.
+2. I want to use an `attr_accessor` here because I don't want inheritance to affect the value of the discriminator value.
+3. Have the discriminator value set in the default to the discriminator key field in each subclass.
+2. Prepend the `discriminator_value` function with the hereditary check, to make it unable to set the `discriminator_value` from the parent.
 3. Change the `inherited` function to use this variable inside the `default_proc`.
-4. Modify the `criteria.rb` (and other) files to change the hard-coded `class.to_s` to use the `discriminator_mapping` class variable to get the discriminator value.
+4. Modify the `criteria.rb` (and other) files to change the hard-coded `class.to_s` to use the `discriminator_value` class variable to get the discriminator value.
 
 ## Assumptions and Risks
 None
@@ -186,7 +186,7 @@ None
 Mongoid-4817: Overriding the default disciminator key.
 
 ## Open Questions
-- Should the function be called `discriminator_mapping` or `discriminator_value`?
+- Should the function be called `discriminator_mapping` or `discriminator_value`? **discriminator_value**
 - Should we use a function for setting the discriminator or an assignment, like ActiveRecord does?
 
 ## Complexity Estimate
