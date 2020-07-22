@@ -172,7 +172,9 @@ The following are my plans for the implementation of this feature:
 
 The main code for adding the discriminator value is in `traversable.rb` in a function titled `inherited`. There are also a few other places where `class.to_s` is hard-coded that have to be changed.
 
-1. Add a class variable to `traversable.rb` that is a `class_attribute` and defaults to `class.to_s`.
+1. Add a class variable to `traversable.rb` that is an `attr_accessor` and defaults to `class.to_s`.
+2. I want to use an `attr_accessor` here because I don't want inheritance to affect the value of the discriminator mapping.
+3. Have the discriminator mappings set in the default to the discriminator key field in each subclass.
 2. Prepend the `discriminator_mapping` function with the hereditary check, to make it unable to set the `discriminator_mapping` from the parent.
 3. Change the `inherited` function to use this variable inside the `default_proc`.
 4. Modify the `criteria.rb` (and other) files to change the hard-coded `class.to_s` to use the `discriminator_mapping` class variable to get the discriminator value.
