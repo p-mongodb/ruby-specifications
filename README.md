@@ -11,8 +11,8 @@ This project is aimed at making it possible for users to override the mapping fo
 Currently, when creating a document in a collection that inherits from another collection, a discriminator field is created, with the key defaulting to `_type` (which we can now successfully override with MONGOID-4817), and the value as the class as a string. The goal of this project is to give the user the ability to override the default value of this field.
 
 ## Goals 
-- Create a user-facing API that allows the user to easily set the discriminator key.
-- Implement a way to specify the discriminator key
+- Create a user-facing API that allows the user to easily set the discriminator mapping.
+- Implement a way to specify the discriminator mapping
 
 ## ActiveRecord Example
 The following is an example of how the discriminator key (called the inheritance_column) is specified in ActiveRecord:
