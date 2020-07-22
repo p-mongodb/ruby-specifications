@@ -12,10 +12,10 @@ Currently, when creating a document in a collection that inherits from another c
 
 ## Goals 
 - Create a user-facing API that allows the user to easily set the discriminator mapping.
-- Implement a way to specify the discriminator mapping
+- Implement a way to specify the discriminator mapping.
 
 ## ActiveRecord Example
-The following is an example of how the discriminator key (called the inheritance_column) is specified in ActiveRecord:
+The following is an example of how the discriminator mapping is specified in ActiveRecord:
 ```ruby
 # shape.rb
 class Shape < ApplicationRecord
@@ -54,7 +54,7 @@ id|x|y|   type2   |        created_at        |        updated_at       |
 
 ## Mongoose Example 
 
-The following is an example of how the discriminator key (called discriminatorKey) is specified in Mongoose:
+The following is an example of how the discriminator mapping is specified in Mongoose:
 ```js
 const { Schema } = mongoose
 
@@ -90,7 +90,7 @@ new Rectangle().save()
 As you can see, the discriminator key is specified in the parent schema. Mongoose also has the option to specify the value of the discriminator for the child schemas. This is why the `shape_type` in the Rectangle document has `rect` as its value, as was set in the third parameter to the `Shape.discriminator()` function.
 
 ## Doctrine Example: 
-The following is an example of how the discriminator key (called the DiscriminatorColumn) is specified in Doctrine:
+The following is an example of how the discriminator mapping is specified in Doctrine:
 ```php
 <?php
 namespace MyProject\Model;
@@ -119,10 +119,9 @@ class Circle extends Shape
 
 The proposed functionality, and the way it works in Mongoose, is as follows:
 
-- The user will be able to set the discriminator value in each child class.
-- On creation of document, a field will be created with the discriminator key that the user specified in the parent class, with the value of the class name as a string.
-- If the discriminator key is changed after documents have been added to the collection, the new key will be used for all future documents while leaving the old ones unmodified.
-- The subclass should not be able to overwrite the dicriminator key of the parent class.
+- The user will be able to set the discriminator mapping in each child class.
+- On creation of document, a field will be created with the discriminator key and the specified discriminator mapping as it's value
+- The parent class should not be able to set the discriminator mapping.
 
 ## User-Facing API
 
